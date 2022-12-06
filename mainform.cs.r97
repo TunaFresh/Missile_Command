@@ -1,0 +1,141 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using GDIDrawer;
+
+namespace AlanMay_Lab02_Missile_Command
+{
+    public partial class mainform : Form
+    {
+        List<Missile> _missileF = new List<Missile>();
+        List<Missile> _missleA = new List<Missile>();
+        Timer _timer = new Timer();
+        CDrawer _canvas = null;
+        int _lives = 5;
+        public mainform()
+        {
+            InitializeComponent();
+            _uiBtnStart.Click += _uiBtnStart_Click;
+            _timer.Interval = 200;
+            _timer.Tick += _timer_Tick;
+            _canvas = new CDrawer();
+            Missile.Canvas = _canvas;
+            _canvas.MouseLeftClick += _canvas_MouseLeftClick;
+            _canvas.MouseRightClick += _canvas_MouseRightClick;
+        }
+
+        private void _canvas_MouseRightClick(Point pos, CDrawer dr)
+        {
+            //note: pos is going to represent destination not origin
+            _missleA.Add(new Missile(0,pos.X,pos.Y,20,1));
+           // Console.WriteLine($"x{pos.X }y{pos.Y}");
+        }
+
+        private void _canvas_MouseLeftClick(Point pos, CDrawer dr)
+        {
+
+        }
+
+        private void _timer_Tick(object sender, EventArgs e)
+        {
+            int foe = 0;
+            
+            //foe = _missile.Count;
+            while(_missileF.Count < 5)
+            {
+                _missileF.Add(new Missile());
+                ++foe;
+            }
+            //Missile.Loading = true;
+            _canvas.Clear();
+            for (int c = 0; c < _missileF.Count; ++c)
+            {
+                _missileF[c].Move();
+                _missileF[c].Render();
+                
+                
+            }
+            for(int c= 0; c<_missleA.Count;++c)
+            {
+                _missleA[c].Move();
+                _missleA[c].Render();
+
+                
+            }
+            _missleA.RemoveAll(m => m.Alpha < 10);
+            /*
+            for(int c=0;c<_missleA.Count;++c)
+            {
+             
+            }*/
+            //Missile.Loading = false;
+            _canvas.AddText($"lives: {_lives.ToString()}",40,Color.White);
+            _canvas.Render();
+            List<Missile> hits = _missleA.Intersect(_missileF).ToList();
+            int count1 = _missileF.Count;
+            foreach(Missile hit in hits)
+            {
+                while (_missileF.Remove(hit)) ;
+                /*
+                if(_missileF.Count < count1)
+                {
+                    Console.WriteLine("test");
+                }*/
+            }
+            //_missileF.RemoveAll(Missile.RemoveLRBound);
+
+           
+            for (int c = 0; c < _missileF.Count; ++c)
+            {
+                if ((_missileF[c].Where().X <= 0) || (_missileF[c].Where().X >= _canvas.ScaledWidth))
+                {
+                    _missileF.RemoveAt(c);
+                }
+            }
+            for (int c = 0; c < _missileF.Count; ++c)
+            {
+                if ((_missileF[c].Where().Y >= _canvas.ScaledHeight))
+                {
+                    --_lives;
+                    _missileF.RemoveAt(c);
+                }
+            }
+        }
+
+        private void _uiBtnStart_Click(object sender, EventArgs e)
+        {
+            _missileF.Clear();
+            //if(Missile.Canvas == null)
+            //{ 
+           
+                //_missile.Add(new Missile());
+            //}
+            _timer.Start();
+            
+        }
+
+        //a way to start, stop & pause game needed
+        //timer default 100ms - user can adjust in +/- 10ms increments
+
+        //enum eGameState {paused, Unstarted, Over, Running}
+        //instructions to be shown when 'unstarted' active
+        //unique messages for paused and over
+
+        //processing to include: game over? less than 5 missiles add 1
+        //user clicked drawer create and send missile
+        //move all incoming, check/remove any side boundary crossing
+        //remove any missiles hitting ground (and decrease player life)
+        //move all friendly missiles, remove exploded missiles
+        //remove all foe missiles hitting friendly missiles
+        //add 100 to score for each missile destroyed
+        //render all objects including score
+        //stats to be shown in main window
+    }
+}
